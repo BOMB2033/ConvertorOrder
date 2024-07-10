@@ -26,6 +26,7 @@ namespace ConvertorOrder.Windows
         {
             InitializeComponent();
             var order = GetInfoOrder();
+            if (order == null) order = new InfoOrder();
             textBlockCastimer.Text = "Заказчик " + order.nameCastumer;
             textBlockOrder.Text = order.number;
             textBlockCount.Text = "Колличество товара: " + order.countProducts.ToString();
@@ -58,7 +59,10 @@ namespace ConvertorOrder.Windows
             }
             if (tempTime.AddMinutes(50) > DateTime.Now)
             {
-                return files[tempIndex].FullName;
+                if (files.Count > 0)
+                    return files[tempIndex].FullName;
+                else
+                    return null;
             }
             return null;
         }
@@ -102,7 +106,10 @@ namespace ConvertorOrder.Windows
             }
             if (tempTime.AddMinutes(50) < DateTime.Now)
                 return null;
-
+            if (files.Count < 1)
+            {
+                return null;
+            }
             workbook = excelApp.Workbooks.Open(files[tempIndex].FullName);
             worksheet = workbook.Sheets[1];
 
@@ -167,8 +174,11 @@ namespace ConvertorOrder.Windows
                 }
 
 
-                worksheet.Cells[8, 9].Value = "Статус";
+                worksheet.Cells[8, 9].Value = "Пометка";
                 worksheet.get_Range("I8:I" + (countRow - 4)).Borders.LineStyle = XlLineStyle.xlContinuous;
+
+                worksheet.Cells[8, 10].Value = "Статус";
+                worksheet.get_Range("J8:J" + (countRow - 4)).Borders.LineStyle = XlLineStyle.xlContinuous;
 
 
                 worksheet.get_Range("A" + countRow).EntireRow.Delete(Excel.XlDeleteShiftDirection.xlShiftUp);
@@ -187,27 +197,34 @@ namespace ConvertorOrder.Windows
 
         private void buttonPrint_Click(object sender, RoutedEventArgs e)
         {
-            EditFile(GetNameFile());
+            if (GetNameFile() != null)
+                EditFile(GetNameFile());
             // Сохраняем изменения и закрываем книгу
-            workbook.SaveAs(GetNameFile().Insert(GetNameFile().Length - 4, " Сборочный "));
+            if (GetNameFile() != null)
+                workbook.SaveAs(GetNameFile().Insert(GetNameFile().Length - 4, " Сборочный "));
 
-            worksheet.PrintOut(Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing);
+            if (GetNameFile() != null)
+                worksheet.PrintOut(Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing, Type.Missing);
 
             // Закрываем книгу
-            workbook.Close();
+            if (GetNameFile() != null)
+                workbook.Close();
 
             // Закрываем приложение Excel
             excelApp.Quit();
 
-            MessageBox.Show("Успешно завершено!");
-
+            if (GetNameFile() != null)
+                MessageBox.Show("Успешно завершено!");
+            else
+                MessageBox.Show("Файл не был найден в папке загрузок, он должне быть только что скаченным (до 50 минут)");
             Environment.Exit(0);
 
         }
 
         private void buttonMore_Click(object sender, RoutedEventArgs e)
         {
-            EditFile(GetNameFile());
+            if (GetNameFile() != null)
+                EditFile(GetNameFile());
             excelApp.Visible = true;
         }
     }
